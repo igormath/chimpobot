@@ -1,0 +1,29 @@
+{
+  "name": "chimpobot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igormath/chimpobot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/igormath/chimpobot/issues"
+  },
+  "homepage": "https://github.com/igormath/chimpobot#readme",
+  "dependencies": {
+    "discord.js": "^13.1.0",
+    "ffbinaries": "^1.1.4",
+    "opusscript": "0.0.8",
+    "ytdl-core": "^4.9.1"
+  }
+}
