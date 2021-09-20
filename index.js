@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { Client, Intents } = require('discord.js')
 const ytdl = require('ytdl-core-discord')
 const {
@@ -12,7 +13,7 @@ const ytsearch = require('youtube-sr')
 const bot = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]
 })
-const token = ''
+const token = `${process.env.APPLICATION_TOKEN}`
 bot.login(token)
 
 function parseMessage(content) {
