@@ -12,7 +12,7 @@ const ytsearch = require('youtube-sr')
 const bot = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]
 })
-const token = 'ODg5MjI1ODQ5OTM1NjQyNjU0.YUeKGw.dD_IglxX48fhKBjSUI_R8jfsITc'
+const token = ''
 bot.login(token)
 
 function parseMessage(content) {
