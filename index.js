@@ -1,11 +1,19 @@
-const { Client, Intents } = require('discord.js');
-const bot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
-const ytdl = require('ytdl-core-discord');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
+const { Client, Intents } = require('discord.js')
+const ytdl = require('ytdl-core-discord')
+const {
+  joinVoiceChannel,
+  createAudioPlayer,
+  createAudioResource,
+  AudioPlayerStatus,
+  StreamType
+} = require('@discordjs/voice')
 const ytsearch = require('youtube-sr')
 
-const token = '';
-bot.login(token);
+const bot = new Client({
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]
+})
+const token = 'ODg5MjI1ODQ5OTM1NjQyNjU0.YUeKGw.dD_IglxX48fhKBjSUI_R8jfsITc'
+bot.login(token)
 
 function parseMessage(content) {
   const message = content.toLowerCase().split(' ')
@@ -16,19 +24,11 @@ function parseMessage(content) {
 }
 
 function playerMonitor(player) {
-  player.on(AudioPlayerStatus.Idle, () => console.log('idle'))
-  player.on(AudioPlayerStatus.Buffering, () => console.log('buff'))
-  player.on(AudioPlayerStatus.Playing, () => console.log('playing'))
-  player.on(AudioPlayerStatus.Paused, () => console.log('paused'))
-  player.on(AudioPlayerStatus.AutoPaused, () => console.log('autopaused'))
-}
-
-async function createPlayer(connection, content) {
-  const player = createAudioPlayer();
-  const resource = createAudioResource(content)
-  const subscription = await connection.subscribe(player)
-
-  return { player, resource, subscription }
+  player.on(AudioPlayerStatus.Idle, () => console.log('Player status: IDLE'))
+  player.on(AudioPlayerStatus.Buffering, () => console.log('Player status: BUFFERING'))
+  player.on(AudioPlayerStatus.Playing, () => console.log('Player status: PLAYING'))
+  player.on(AudioPlayerStatus.Paused, () => console.log('Player status: PAUSED'))
+  player.on(AudioPlayerStatus.AutoPaused, () => console.log('Player status: AUTOPAUSED'))
 }
 
 function createConnection(channel, guild) {
@@ -40,11 +40,11 @@ function createConnection(channel, guild) {
 }
 
 bot.on('messageCreate', async message => {
-  const { author, content, guild, member } = message;
+  const { author, content, guild, member } = message
   const { search, command } = parseMessage(content)
 
   if (author.bot) {
-    return;
+    return
   }
 
   if (command === ';toca') {
@@ -53,18 +53,30 @@ bot.on('messageCreate', async message => {
     const song = await ytsearch.YouTube.searchOne(search)
 
     if (!channel) {
-      return console.log('Canal não foi encontrado.');
+      return console.log('Canal não foi encontrado.')
     }
 
-    const options = { filter: 'audioonly' }
-    const stream = await ytdl(`https://www.youtube.com/watch?v=${song.id}`, options);
+    try {
+      const stream = await ytdl(`https://www.youtube.com/watch?v=${song.id}`, {
+        highWaterMark: 1 << 25,
+        filter: 'audioonly',
+        format: 'mp3',
+        quality: 'highestaudio'
+      })
 
-    // Play
-    const { player, resource } = await createPlayer(connection, stream)
-    player.play(resource)
-    message.reply(`Lansei a braba: ${song.title} (${song.durationFormatted})`)
+      const player = createAudioPlayer()
+      const resource = createAudioResource(stream, { inputType: StreamType.Opus })
+      connection.subscribe(player)
 
-    // Monitor
-    playerMonitor(player)
+      // Play
+      player.play(resource)
+      message.reply(`Lansei a braba: ${song.title} (${song.durationFormatted})`)
+
+      // Player monitor
+      playerMonitor(player)
+    } catch (error) {
+      connection.disconnect()
+      console.log('Erro: ', error)
+    }
   }
-});
+})
