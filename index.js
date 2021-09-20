@@ -49,6 +49,10 @@ bot.on('messageCreate', async message => {
   }
 
   if (command === ';toca') {
+    if (!member.voice.channel) {
+      return message.reply('Entre em um canal de voz para poder chamar o Chimpa Tocador')
+    }
+
     const channel = member.voice.channel
     const connection = createConnection(channel, guild)
     const song = await ytsearch.YouTube.searchOne(search)
