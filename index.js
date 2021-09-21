@@ -25,24 +25,26 @@ function parseMessage(content) {
   return { command, search }
 }
 
-function playerMonitor({ message, player, song }) {
+function playerMonitor(player) {
   player.on(AudioPlayerStatus.Idle, () => {
-    console.log('Player status: IDLE')
+    console.log('Player status: IDLE\n')
     if (queue.length === 0) {
       return
     }
 
     queue.shift()
     if (queue.length > 0) {
-      player.play(queue[0])
+      const { song, message, resource } = queue[0]
+
+      player.play(resource)
       message.reply(`Lansei a braba: ${song.title} (${song.durationFormatted})`)
     }
   })
 
-  player.on(AudioPlayerStatus.Playing, () => console.log('Player status: PLAYING\nIn queue: ', queue.length - 1))
-  player.on(AudioPlayerStatus.Buffering, () => console.log('Player status: BUFFERING'))
-  player.on(AudioPlayerStatus.Paused, () => console.log('Player status: PAUSED'))
-  player.on(AudioPlayerStatus.AutoPaused, () => console.log('Player status: AUTOPAUSED'))
+  player.on(AudioPlayerStatus.Playing, () => console.log(`Player status: PLAYING\nIn queue: ${queue.length - 1}\n`))
+  player.on(AudioPlayerStatus.Buffering, () => console.log('Player status: BUFFERING\n'))
+  player.on(AudioPlayerStatus.Paused, () => console.log('Player status: PAUSED\n'))
+  player.on(AudioPlayerStatus.AutoPaused, () => console.log('Player status: AUTOPAUSED\n'))
 }
 
 function createConnection(channel, guild) {
@@ -87,15 +89,16 @@ bot.on('messageCreate', async message => {
 
       if (queue.length === 0 && IDLE_STATE) {
         connection.subscribe(player)
-        queue.push(resource)
+        queue.push({ resource, message, song })
         player.play(resource)
         message.reply(`Lansei a braba: ${song.title} (${song.durationFormatted})`)
       } else if (AudioPlayerStatus.Playing) {
-        queue.push(resource)
+        queue.push({ resource, message, song })
+        console.log('Added to queue: ', song.title)
         message.reply(`Essa braba foi pra fila: ${song.title} (${song.durationFormatted})`)
       }
 
-      playerMonitor({ player, message, song })
+      playerMonitor(player)
     } catch (error) {
       queue = []
       connection.disconnect()
