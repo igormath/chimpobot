@@ -85,8 +85,8 @@ bot.on('messageCreate', async message => {
         player.play(resource)
         message.reply(`Ta ta ta, próxima: ${song.title} (${song.durationFormatted})`)
       } else {
-        player.stop();
-        queue.shift();
+        player.stop()
+        queue.shift()
       }
 
       playerMonitor(player)
