@@ -63,11 +63,37 @@ bot.on('messageCreate', async message => {
     return
   }
 
-  if (command === ';toca') {
-    if (!member.voice.channel) {
-      return message.reply('Entre em um canal de voz para poder chamar o Chimpa Tocador')
+  if (!member.voice.channel) {
+    return message.reply('Entre em um canal de voz para poder chamar o Chimpa Tocador')
+  }
+
+  const player = createAudioPlayer()
+
+  if (command === ';prox') {
+    if (queue.length === 0) {
+      return console.log('No more musics')
     }
 
+    if (AudioPlayerStatus.Playing) {
+      const channel = member.voice.channel
+      const connection = createConnection(channel, guild)
+      connection.subscribe(player)
+
+      if (queue.length > 1) {
+        queue.shift()
+        const { song, message, resource } = queue[0]
+        player.play(resource)
+        message.reply(`Ta ta ta, próxima: ${song.title} (${song.durationFormatted})`)
+      } else {
+        player.stop()
+        queue.shift()
+      }
+
+      playerMonitor(player)
+    }
+  }
+
+  if (command === ';toca') {
     const channel = member.voice.channel
     const connection = createConnection(channel, guild)
     const song = await ytsearch.YouTube.searchOne(search)
@@ -84,7 +110,6 @@ bot.on('messageCreate', async message => {
         format: 'mp3',
         quality: 'highestaudio'
       })
-      const player = createAudioPlayer()
       const resource = createAudioResource(stream, { inputType: StreamType.Opus })
 
       if (queue.length === 0 && IDLE_STATE) {
