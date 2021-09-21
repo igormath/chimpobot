@@ -15,6 +15,7 @@ const bot = new Client({
 })
 const token = `${process.env.APPLICATION_TOKEN}`
 bot.login(token)
+var queue = []
 
 function parseMessage(content) {
   const message = content.toLowerCase().split(' ')
@@ -25,11 +26,25 @@ function parseMessage(content) {
 }
 
 function playerMonitor(player) {
-  player.on(AudioPlayerStatus.Idle, () => console.log('Player status: IDLE'))
-  player.on(AudioPlayerStatus.Buffering, () => console.log('Player status: BUFFERING'))
-  player.on(AudioPlayerStatus.Playing, () => console.log('Player status: PLAYING'))
-  player.on(AudioPlayerStatus.Paused, () => console.log('Player status: PAUSED'))
-  player.on(AudioPlayerStatus.AutoPaused, () => console.log('Player status: AUTOPAUSED'))
+  player.on(AudioPlayerStatus.Idle, () => {
+    console.log('Player status: IDLE\n')
+    if (queue.length === 0) {
+      return
+    }
+
+    queue.shift()
+    if (queue.length > 0) {
+      const { song, message, resource } = queue[0]
+
+      player.play(resource)
+      message.reply(`Lansei a braba: ${song.title} (${song.durationFormatted})`)
+    }
+  })
+
+  player.on(AudioPlayerStatus.Playing, () => console.log(`Player status: PLAYING\nIn queue: ${queue.length - 1}\n`))
+  player.on(AudioPlayerStatus.Buffering, () => console.log('Player status: BUFFERING\n'))
+  player.on(AudioPlayerStatus.Paused, () => console.log('Player status: PAUSED\n'))
+  player.on(AudioPlayerStatus.AutoPaused, () => console.log('Player status: AUTOPAUSED\n'))
 }
 
 function createConnection(channel, guild) {
@@ -49,6 +64,10 @@ bot.on('messageCreate', async message => {
   }
 
   if (command === ';toca') {
+    if (!member.voice.channel) {
+      return message.reply('Entre em um canal de voz para poder chamar o Chimpa Tocador')
+    }
+
     const channel = member.voice.channel
     const connection = createConnection(channel, guild)
     const song = await ytsearch.YouTube.searchOne(search)
@@ -58,24 +77,30 @@ bot.on('messageCreate', async message => {
     }
 
     try {
+      const IDLE_STATE = AudioPlayerStatus.Idle || AudioPlayerStatus.AutoPaused
       const stream = await ytdl(`https://www.youtube.com/watch?v=${song.id}`, {
         highWaterMark: 1 << 25,
         filter: 'audioonly',
         format: 'mp3',
         quality: 'highestaudio'
       })
-
       const player = createAudioPlayer()
       const resource = createAudioResource(stream, { inputType: StreamType.Opus })
-      connection.subscribe(player)
 
-      // Play
-      player.play(resource)
-      message.reply(`Lansei a braba: ${song.title} (${song.durationFormatted})`)
+      if (queue.length === 0 && IDLE_STATE) {
+        connection.subscribe(player)
+        queue.push({ resource, message, song })
+        player.play(resource)
+        message.reply(`Lansei a braba: ${song.title} (${song.durationFormatted})`)
+      } else if (AudioPlayerStatus.Playing) {
+        queue.push({ resource, message, song })
+        console.log('Added to queue: ', song.title)
+        message.reply(`Essa braba foi pra fila: ${song.title} (${song.durationFormatted})`)
+      }
 
-      // Player monitor
       playerMonitor(player)
     } catch (error) {
+      queue = []
       connection.disconnect()
       console.log('Erro: ', error)
     }
