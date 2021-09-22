@@ -123,11 +123,21 @@ bot.on('messageCreate', async message => {
         message.reply(`Essa braba foi pra fila: ${song.title} (${song.durationFormatted})`)
       }
 
+      if (IDLE_STATE) {
+        return queue.splice(0, queue.length)
+      }
+
       playerMonitor(player)
     } catch (error) {
       queue = []
       connection.disconnect()
       console.log('Erro: ', error)
     }
+  }
+
+  if (command === ';ajuda') {
+    const text = 'No momento, possuo os seguintes comandos: \n\n\`;toca <URL>\` ou \`;toca <termo-para-busca>\`: Toca a música de uma URL ou faz uma busca pelo termo no youtube. \n\n\`;prox\`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia.';
+    return message.reply({ content: text, allowedMentions: { repliedUser: true } })
+
   }
 })
