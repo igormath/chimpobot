@@ -6,7 +6,8 @@ const {
   createAudioPlayer,
   createAudioResource,
   AudioPlayerStatus,
-  StreamType
+  StreamType,
+  getVoiceConnection
 } = require('@discordjs/voice')
 const ytsearch = require('youtube-sr')
 
@@ -41,7 +42,7 @@ function playerMonitor(player) {
     }
   })
 
-  player.on(AudioPlayerStatus.Playing, () => console.log(`Player status: PLAYING\nIn queue: ${queue.length - 1}\n`))
+  player.on(AudioPlayerStatus.Playing, () => console.log(`Player status: PLAYING\nIn queue: ${queue.length - 1}\n`))
   player.on(AudioPlayerStatus.Buffering, () => console.log('Player status: BUFFERING\n'))
   player.on(AudioPlayerStatus.Paused, () => console.log('Player status: PAUSED\n'))
   player.on(AudioPlayerStatus.AutoPaused, () => console.log('Player status: AUTOPAUSED\n'))
@@ -52,6 +53,16 @@ function createConnection(channel, guild) {
     channelId: channel.id,
     guildId: guild.id,
     adapterCreator: guild.voiceAdapterCreator
+  })
+}
+
+function connectionMonitor(connection, player) {
+  connection.on('disconnected', () => {
+    console.log('\nClearing queue...')
+    queue = []
+    player.stop()
+    player.removeAllListeners()
+    console.log('Disconnected\n')
   })
 }
 
@@ -68,6 +79,9 @@ bot.on('messageCreate', async message => {
   }
 
   const player = createAudioPlayer()
+  const channel = member.voice.channel
+  const connection = createConnection(channel, guild)
+  connectionMonitor(connection, player, channel)
 
   if (command === ';prox') {
     if (queue.length === 0) {
@@ -75,8 +89,6 @@ bot.on('messageCreate', async message => {
     }
 
     if (AudioPlayerStatus.Playing) {
-      const channel = member.voice.channel
-      const connection = createConnection(channel, guild)
       connection.subscribe(player)
 
       if (queue.length > 1) {
@@ -94,8 +106,6 @@ bot.on('messageCreate', async message => {
   }
 
   if (command === ';toca') {
-    const channel = member.voice.channel
-    const connection = createConnection(channel, guild)
     const song = await ytsearch.YouTube.searchOne(search)
 
     if (!channel) {
@@ -123,10 +133,6 @@ bot.on('messageCreate', async message => {
         message.reply(`Essa braba foi pra fila: ${song.title} (${song.durationFormatted})`)
       }
 
-      if (IDLE_STATE) {
-        return queue.splice(0, queue.length)
-      }
-
       playerMonitor(player)
     } catch (error) {
       queue = []
@@ -136,8 +142,8 @@ bot.on('messageCreate', async message => {
   }
 
   if (command === ';ajuda') {
-    const text = 'No momento, possuo os seguintes comandos: \n\n\`;toca <URL>\` ou \`;toca <termo-para-busca>\`: Toca a música de uma URL ou faz uma busca pelo termo no youtube. \n\n\`;prox\`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia.';
+    const text =
+      'No momento, possuo os seguintes comandos: \n\n`;toca <URL>` ou `;toca <termo-para-busca>`: Toca a música de uma URL ou faz uma busca pelo termo no youtube. \n\n`;prox`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia.'
     return message.reply({ content: text, allowedMentions: { repliedUser: true } })
-
   }
 })
