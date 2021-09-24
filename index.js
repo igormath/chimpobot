@@ -70,6 +70,10 @@ bot.on('messageCreate', async message => {
   const { author, content, guild, member } = message
   const { search, command } = parseMessage(content)
 
+  if (command[0] != ';') {
+    return
+  }
+
   if (author.bot) {
     return
   }
