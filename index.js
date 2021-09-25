@@ -126,7 +126,7 @@ bot.on('messageCreate', async message => {
         return message.reply('Nenhum resultado encontrado!');
       }
 
-      const formattedResult = results.map((result, index) => `${index + 1} - ${result.title} (${result.duration})`)
+      const formattedResult = results.map((result, index) => `${index + 1} - ${result.title} (${result.durationFormatted})`)
       return message.reply(formattedResult.join('\n'));
     }
 
