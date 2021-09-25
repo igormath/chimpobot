@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { Client, Intents } = require('discord.js')
+const { Client, Intents, MessageEmbed } = require('discord.js')
 const ytdl = require('ytdl-core-discord')
 const {
   joinVoiceChannel,
@@ -17,6 +17,8 @@ const bot = new Client({
 const token = `${process.env.APPLICATION_TOKEN}`
 bot.login(token)
 var queue = []
+var results = []
+var tempResults = []
 
 function parseMessage(content) {
   const message = content.toLowerCase().split(' ')
@@ -110,13 +112,33 @@ bot.on('messageCreate', async message => {
   }
 
   if (command === ';toca') {
-    const song = await ytsearch.YouTube.searchOne(search)
-
     if (!channel) {
       return console.log('Canal não foi encontrado.')
     }
 
+    //  const song = await ytsearch.YouTube.searchOne(search)
+
+    if (tempResults.length === 0) {
+      tempResults = await ytsearch.YouTube.search(search)
+      results = tempResults?.slice(0, 5) ?? []
+
+      if (results.length === 0) {
+        return message.reply('Nenhum resultado encontrado!');
+      }
+
+      const formattedResult = results.map((result, index) => `${index + 1} - ${result.title} (${result.duration})`)
+      return message.reply(formattedResult.join('\n'));
+    }
+
     try {
+      //  Search in this case is the result number
+      const song = results[search - 1]
+      if (!song) {
+        tempResults = []
+        results = []
+        return message.reply('Comando inválido! Faça a busca novamente.')
+      }
+
       const IDLE_STATE = AudioPlayerStatus.Idle || AudioPlayerStatus.AutoPaused
       const stream = await ytdl(`https://www.youtube.com/watch?v=${song.id}`, {
         highWaterMark: 1 << 25,
@@ -127,6 +149,7 @@ bot.on('messageCreate', async message => {
       const resource = createAudioResource(stream, { inputType: StreamType.Opus })
 
       if (queue.length === 0 && IDLE_STATE) {
+        tempResults = []
         connection.subscribe(player)
         queue.push({ resource, message, song })
         player.play(resource)
@@ -147,7 +170,7 @@ bot.on('messageCreate', async message => {
 
   if (command === ';ajuda') {
     const text =
-      'No momento, possuo os seguintes comandos: \n\n`;toca <URL>` ou `;toca <termo-para-busca>`: Toca a música de uma URL ou faz uma busca pelo termo no youtube. \n\n`;prox`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia.'
+      'No momento, possuo os seguintes comandos: \n\n`;toca <URL>` ou `;toca <termo-para-busca>`: Toca a música de uma URL ou retorna 5 resultados da busca pelo termo no youtube.\nUse `;toca <número-da-musica>` para tocar a música escolhida. \n\n`;prox`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia.'
     return message.reply({ content: text, allowedMentions: { repliedUser: true } })
   }
 })
