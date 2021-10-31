@@ -16,6 +16,7 @@ const bot = new Client({
 })
 const token = `${process.env.APPLICATION_TOKEN}`
 bot.login(token)
+
 var queue = []
 var results = []
 var tempResults = []
@@ -72,11 +73,13 @@ function clearResults() {
   tempResults = []
 }
 
+bot.on('ready', () => {
+  bot.user.setActivity('Tarimba')
+})
+
 bot.on('messageCreate', async message => {
   const { author, content, guild, member } = message
   const { search, command } = parseMessage(content)
-
-  bot.user.setActivity('Tarimba')
 
   if (command[0] != ';') {
     return
