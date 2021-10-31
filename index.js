@@ -76,6 +76,8 @@ bot.on('messageCreate', async message => {
   const { author, content, guild, member } = message
   const { search, command } = parseMessage(content)
 
+  bot.user.setActivity('Tarimba')
+
   if (command[0] != ';') {
     return
   }
