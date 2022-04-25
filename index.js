@@ -186,4 +186,28 @@ bot.on('messageCreate', async message => {
       'No momento, possuo os seguintes comandos: \n\n`;toca <URL>` ou `;toca <termo-para-busca>`: Toca a música de uma URL ou retorna 5 resultados da busca pelo termo no youtube.\nUse `;toca <número-da-musica>` para tocar a música escolhida. \n\n`;prox`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia.'
     return message.reply({ content: text, allowedMentions: { repliedUser: true } })
   }
+
+  if (command === ';tira') {
+    let resultsArray = search.split(', '), team1 = [], team2 = [], size = resultsArray.length
+
+    if (size % 2 !== 0) {
+      message.reply('O total de jogadores informado deve ser par!')
+    } else {
+      let currentIndex = size, randomIndex;
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex)
+        currentIndex--
+        [resultsArray[currentIndex], resultsArray[randomIndex]] = [resultsArray[randomIndex], resultsArray[currentIndex]]
+      }
+
+      resultsArray.forEach((value, index) => {
+        if (index < (size / 2)) {
+          team1.push(value)
+        } else {
+          team2.push(value)
+        }
+      })
+      message.reply(`Time das putas:${team1} \nTime dos viados:${team2}`)
+    }
+  }
 })
