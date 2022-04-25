@@ -170,6 +170,15 @@ bot.on('messageCreate', async message => {
         message.reply(`Essa braba foi pra fila: ${song.title} (${song.durationFormatted})`)
       }
 
+      const checkIdle = (player) => {
+        player.on(AudioPlayerStatus.Idle, () => {
+          setTimeout(() => {
+            connection.disconnect()
+          }, 10000)
+        })
+      }
+
+      checkIdle(player)
       clearResults()
       playerMonitor(player)
     } catch (error) {
