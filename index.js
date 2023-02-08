@@ -183,7 +183,13 @@ bot.on('messageCreate', async message => {
     clearResults()
 
     const text =
-      'No momento, possuo os seguintes comandos: \n\n`;toca <URL>` ou `;toca <termo-para-busca>`: Toca a música de uma URL ou retorna 5 resultados da busca pelo termo no youtube.\nUse `;toca <número-da-musica>` para tocar a música escolhida. \n\n`;prox`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia.'
+      'No momento, possuo os seguintes comandos: \n\n`;toca <URL>` ou `;toca <termo-para-busca>`: Toca a música de uma URL ou retorna 5 resultados da busca pelo termo no youtube.\nUse `;toca <número-da-musica>` para tocar a música escolhida. \n\n`;prox`: Toca a próxima música da fila. O comando também serve para parar a música atual se a fila estiver vazia. \n\n`;reinicia`: Reinicia o bot.'
     return message.reply({ content: text, allowedMentions: { repliedUser: true } })
+  }
+
+  if (command === ';reinicia') {
+    message.reply(`Eita, me embolei todin kkkk Bota a música de novo aí, pai d'égua!`)
+    bot.destroy()
+    bot.login(token)
   }
 })
