@@ -15,7 +15,7 @@ A node.js discord music bot featuring play, queue and next song functions.
 - Download or clone this repository;
 - Install [Node Version Manager ](https://github.com/nvm-sh/nvm);
 - Now install Node-JS 16.7.0 version with `nvm install v16.7.0` and select it with `nvm use 16.7.0`;
-- Go to local repo folder and install all the project library with `node install`or `node -i` terminal command;
+- Go to local repo folder and install all the project library with `npm install` terminal command;
 - Create a .env file with your application token.
 - Finally run the project with `npm run start` command on terminal;
 - Enjoy!
